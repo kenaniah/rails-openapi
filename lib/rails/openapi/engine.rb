@@ -1,6 +1,5 @@
 module Rails
   module Openapi
-
     # Defines a base class from which OpenAPI engines can be created.
     # Uses namespace isolation to ensure routes don't conflict with any
     # pre-existing routes from the main rails application.
@@ -10,19 +9,18 @@ module Rails
 
     # Helper method to create a new engine based on a module namespace prefix and an OpenAPI spec file
     def self.Engine namespace:, schema:, publish_schema: true
-
       # Convert the module prefix into a constant if passed in as a string
       base_module = Object.const_get namespace if String === namespace
 
       # Ensure the OpenAPI spec file is in an acceptable format
       begin
-        require 'yaml'
-        document = YAML.load schema
-        unless document.is_a?(Hash) && document['openapi'].present?
+        require "yaml"
+        document = YAML.safe_load schema
+        unless document.is_a?(Hash) && document["openapi"].present?
           raise "The schema argument could not be parsed as an OpenAPI schema"
         end
-        unless Gem::Version.new(document['openapi']) >= Gem::Version.new('3.1')
-          raise "The schema argument must be an OpenAPI 3.1+ schema. You passed in a schema with version #{document['openapi']}"
+        unless Gem::Version.new(document["openapi"]) >= Gem::Version.new("3.1")
+          raise "The schema argument must be an OpenAPI 3.1+ schema. You passed in a schema with version #{document["openapi"]}"
         end
       rescue Psych::SyntaxError
         raise $!, "Problem parsing OpenAPI schema: #{$!.message.lines.first.strip}", $@
@@ -49,21 +47,16 @@ module Rails
       # Exposes `::router` and `::endpoints` methods to allow other parts
       # of the code to tie requests back to their spec file definitions.
       engine = Class.new Engine do
-
         @router = router
-        @endpoints = Hash.new
+        @endpoints = {}
         @schema = document
 
         class << self
-          def router
-            @router
-          end
-          def endpoints
-            @endpoints
-          end
-          def schema
-            @schema
-          end
+          attr_reader :router
+
+          attr_reader :endpoints
+
+          attr_reader :schema
         end
 
         # Rack app for serving the original OpenAPI file
@@ -83,13 +76,12 @@ module Rails
         # Adds routes to the engine by passing the Mapper to the top
         # of the routing tree. `self` inside the block refers to an
         # instance of `ActionDispatch::Routing::Mapper`.
-        self.routes.draw do
+        routes.draw do
           scope module: base_module.name.underscore, format: false do
             get "openapi.json", to: openapi_app.new, as: :openapi_schema if publish_schema
             router.draw self
           end
         end
-
       end
 
       # Assign the engine as a class on the base module
@@ -101,7 +93,6 @@ module Rails
       # action the request is routed to. OpenAPI spec file definitions
       # are then attached to that controller/action pair.
       endpoints.each do |route|
-
         # Mocks a request using the route's URL
         url = ::ActionDispatch::Journey::Router::Utils.normalize_path route.path
         env = ::Rack::MockRequest.env_for url, method: route[:method].upcase
@@ -110,14 +101,13 @@ module Rails
         # Maps the OpenAPI spec endpoint to the destination controller
         # action by routing the request.
         begin
-          mapped = engine.routes.router.recognize(req){}.first[2].defaults
+          mapped = engine.routes.router.recognize(req) {}.first[2].defaults
         rescue
           Rails.logger.error "Could not resolve the OpenAPI route for #{req.method} #{req.url}"
           next
         end
         key = "#{mapped[:controller]}##{mapped[:action]}"
         engine.endpoints[key] = route
-
       end
       engine.endpoints.freeze
 
@@ -137,8 +127,6 @@ module Rails
 
       # Returns the new engine
       base_module.const_get :Engine
-
     end
-
   end
 end
