@@ -68,7 +68,7 @@ Routes for Api::Stripe::Engine:
                                   DELETE   /v1/account/persons/:id(.:format)                    api/stripe/v1/account/persons#destroy
                      v1_account   GET      /v1/account(.:format)                                api/stripe/v1/account#show
                                   POST     /v1/account(.:format)                                api/stripe/v1/account#create
-                                  ...                                                         ...
+                                  ...                                                           ...
 ```
 
 ## `Rails::Openapi#Engine` arguments
