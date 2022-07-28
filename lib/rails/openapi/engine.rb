@@ -49,7 +49,7 @@ module Rails
       engine = Class.new Engine do
         @router = router
         @endpoints = {}
-        @schema = document
+        @schema = document.freeze
 
         class << self
           attr_reader :router
@@ -118,8 +118,17 @@ module Rails
         @base = base_module
         def self.included controller
           base_module = @base
+          # Returns a reference to the Rails engine generated for this OpenAPI spec file
           define_method :openapi_engine do
             base_module.const_get :Engine
+          end
+          # Returns the OpenAPI schema used to generate the Rails engine as a Hash
+          define_method :openapi_schema do
+            base_module.const_get(:Engine).schema
+          end
+          # Returns the OpenAPI spec's endpoint definition for current request
+          define_method :openapi_endpoint do
+            openapi_engine.endpoints["#{request.path_parameters[:controller]}##{request.path_parameters[:action]}"]
           end
         end
       end

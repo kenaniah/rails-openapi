@@ -22,13 +22,21 @@ Rails.application.routes.draw do
 
   # Mount at /api/stripe using an engine namespace of Api::Stripe::
   namespace :api do
-    Rails::Openapi::Engine(namespace: "Api::Stripe", schema: File.read("test/schemas/stripe-api.yaml")), at: :stripe, as: :stripe_api
+    mount Rails::Openapi::Engine(namespace: "Api::Stripe", schema: File.read("test/schemas/stripe-api.yaml")), at: :stripe, as: :stripe_api
   end
 
 end
 ```
 
-For example, when loading [Stripe's OpenAPI Schema](https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.yaml), Rails would generate the following routes:
+And include the OpenAPI helper in your application's controllers:
+
+```ruby
+class Api::Stripe::V1::AccountController < ApplicationController
+  include Api::Stripe::OpenapiHelper
+end
+```
+
+Then verify that your API's routes have been generated correctly. For example, when loading [Stripe's OpenAPI Schema](https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.yaml), Rails would generate the following routes:
 
 ```
                     Prefix        Verb     URI Pattern                                          Controller#Action
@@ -63,6 +71,26 @@ Routes for Api::Stripe::Engine:
                                   ...                                                         ...
 ```
 
+## `Rails::Openapi#Engine` arguments
+
+The `Rails::Openapi#Engine` constructor accepts the following arguments:
+
+| Argument | Required? | Description |
+| -------- | --------- | ----------- |
+| `namespace` | Yes | The module namespace to mount the generated Rails engine under. |
+| `schema` | Yes | The OpenAPI schema to use. Must be a valid OpenAPI 3.0+ schema in either JSON or YAML format. |
+| `publish_schema` | No | Whether to create an `/openapi.json` route that outputs the generated engine's OpenAPI schema. Defaults to `true`. |
+
+## _[Namespace]_::OpenapiHelper
+
+The generated engine will have a module named _[Namespace]_::OpenapiHelper. For example, an engine created with a namespace of `PetStore::V1` would generate a `PetStore::V1::OpenapiHelper` module. This module will contain the following methods:
+
+| Controller Helper Method | Description |
+| ------ | ----------- |
+| `#openapi_schema` | Returns the OpenAPI schema that was used to generate the engine as a Hash |
+| `#openapi_engine` | Returns a reference to the engine (can be used for path generation and URL helpers) |
+| `#openapi_endpoint` | Returns the OpenAPI schema's endpoint definition for the current request |
+
 
 ## Development
 
@@ -72,7 +100,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rails-openapi.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kenaniah/rails-openapi.
 
 ## License
 
