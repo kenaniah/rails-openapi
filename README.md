@@ -71,7 +71,26 @@ Routes for Api::Stripe::Engine:
                                   ...                                                           ...
 ```
 
-## `Rails::Openapi#Engine` arguments
+Using the above example, path helpers can be accessed by calling the `stripe_api` helper (or whatever you named the engine via `as:` when it was mounted -- see mount statement above) in controllers & views:
+
+```ruby
+stripe_api.openapi_schema_path #=> "/api/stripe/openapi.json"
+stripe_api.v1_account_person_path(id: 1234) #=> "/api/stripe/v1/account/people/1234"
+```
+
+Alternatively, the `#openapi_engine` helper can be used to refer to the routing engine when inside of a controller or its views:
+
+```ruby
+class Api::Stripe::V1::AccountController < ApplicationController
+  include Api::Stripe::OpenapiHelper
+  def index
+    openapi_engine.openapi_schema_path #=> "/api/stripe/openapi.json"
+    openapi_engine == stripe_api #=> true
+  end
+end
+```
+
+## `Rails::Openapi#Engine`'s arguments
 
 The `Rails::Openapi#Engine` constructor accepts the following arguments:
 

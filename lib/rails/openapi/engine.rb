@@ -130,6 +130,8 @@ module Rails
           define_method :openapi_endpoint do
             openapi_engine.endpoints["#{request.path_parameters[:controller]}##{request.path_parameters[:action]}"]
           end
+          # Allows the helper methods to also be used in views
+          controller.helper_method :openapi_engine, :openapi_schema, :openapi_endpoint
         end
       end
       base_module.const_set :OpenapiHelper, mod
