@@ -19,8 +19,8 @@ module Rails
         unless document.is_a?(Hash) && document["openapi"].present?
           raise "The schema argument could not be parsed as an OpenAPI schema"
         end
-        unless Gem::Version.new(document["openapi"]) >= Gem::Version.new("3.1")
-          raise "The schema argument must be an OpenAPI 3.1+ schema. You passed in a schema with version #{document["openapi"]}"
+        unless Gem::Version.new(document["openapi"]) >= Gem::Version.new("3.0")
+          raise "The schema argument must be an OpenAPI 3.0+ schema. You passed in a schema with version #{document["openapi"]}"
         end
       rescue Psych::SyntaxError
         raise $!, "Problem parsing OpenAPI schema: #{$!.message.lines.first.strip}", $@

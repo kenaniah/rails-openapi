@@ -20,6 +20,7 @@ module Rails
     }.freeze
     PARAM_ROUTES = {
       get: :show,
+      post: :create,
       patch: :update,
       put: :update,
       delete: :destroy
@@ -81,7 +82,7 @@ module Rails
       # Determines the action for a specific route
       def action_for route
         raise "Argument must be an Endpoint" unless Endpoint === route
-        action = @prefix[-1]
+        action = @prefix[-1]&.underscore || ""
         action = PARAM_ROUTES[route[:method]] if action_mode == :param
         action = RESOURCE_ROUTES[route[:method]] if route_mode == :resource && action_mode == :collection
         action
@@ -109,7 +110,7 @@ module Rails
           end
 
           # Draw the resource
-          map.send type, @prefix.last.to_sym, only: actions, format: nil do
+          map.send type, @prefix.last&.to_sym || "/", controller: @prefix.last&.underscore || "main", only: actions, as: @prefix.last&.underscore || "main", format: nil do
             draw_actions! map
 
             # Draw a namespace (unless at the top)
@@ -180,6 +181,7 @@ module Rails
           params[:via] = route[:method]
           params[:on] = action_mode unless action_mode == :param
           params[:action] = action_for route
+          params[:as] = @prefix.last&.underscore
 
           # These are handled in the resource
           next if Symbol === params[:action]
