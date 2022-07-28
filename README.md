@@ -25,6 +25,9 @@ Rails.application.routes.draw do
     mount Rails::Openapi::Engine(namespace: "Api::Stripe", schema: File.read("test/schemas/stripe-api.yaml")), at: :stripe, as: :stripe_api
   end
 
+  # Mount at /store-api using an engine namespace of Petstore::
+  mount Rails::Openapi::Engine(namespace: "Petstore", schema: File.read("test/schemas/petstore.json")), at: "store-api", as: :petstore_api
+
 end
 ```
 
@@ -32,7 +35,50 @@ And include the OpenAPI helper in your application's controllers:
 
 ```ruby
 class Api::Stripe::V1::AccountController < ApplicationController
+
+  # Includes the stripe_api engine's OpenAPI helpers
   include Api::Stripe::OpenapiHelper
+
+  def index
+
+    # absolute engine references (defined in routes file)
+    stripe_api.openapi_schema_path #=> "/api/stripe/openapi.json"
+    petstore_api.openapi_schema_path #=> "/store-api/openapi.json"
+    stripe_api.v1_account_person_path(id: 1234) #=> "/api/stripe/v1/account/people/1234"
+
+    # relative engine references (defined by the helper included above)
+    openapi_engine.schema_path #=> "/api/stripe/openapi.json"
+    openapi_engine.v1_account_person_path(id: 1234) #=> "/api/stripe/v1/account/people/1234"
+
+    # for clarity
+    openapi_engine == stripe_api #=> true
+    openapi_engine == petstore_api #=> false
+
+  end
+
+end
+
+class Petstore::ExampleController < ApplicationController
+
+    # Includes the petstore_api engine's OpenAPI helpers
+    include Petstore::OpenapiHelper
+
+    def index
+
+        # absolute engine references (defined in routes file)
+        petstore_api.pets_path #=> "/store-api/pets"
+        petstore_api.openapi_schema_path #=> "/store-api/openapi.json"
+        stripe_api.openapi_schema_path #=> "/api/stripe/openapi.json"
+
+        # relative engine references (defined by the helper included above)
+        openapi_engine.pets_path #=> "/store-api/pets"
+
+        # for clarity
+        openapi_engine == stripe_api #=> false
+        openapi_engine == petstore_api #=> true
+
+    end
+
 end
 ```
 
@@ -41,6 +87,7 @@ Then verify that your API's routes have been generated correctly. For example, w
 ```
                     Prefix        Verb     URI Pattern                                          Controller#Action
                  api_stripe_api            /api/stripe                                          Api::Stripe::Engine
+                   petstore_api            /store-api                                           Petstore::Engine
 
 Routes for Api::Stripe::Engine:
                  openapi_schema   GET      /openapi.json                                        Rails::Openapi::Engine
