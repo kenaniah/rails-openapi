@@ -1,6 +1,6 @@
 # Rails::Openapi
 
-Provides mountable Rails engines that can be used to route and serve your APIs based on their OpenAPI schema specifications.
+Provides mountable Rails engines that can be used to generate RESTful routes for your APIs based on their OpenAPI schema specifications.
 
 OpenAPI schema versions 3.0 and newer are supported. For more information about the OpenAPI specification, see https://oai.github.io/Documentation/introduction.html.
 
@@ -157,6 +157,16 @@ The generated engine will have a module named _[Namespace]_::OpenapiHelper. For 
 | `#openapi_engine` | Returns a reference to the engine (can be used for path generation and URL helpers) |
 | `#openapi_endpoint` | Returns the OpenAPI schema's endpoint definition for the current request |
 
+## Caveats
+
+ * Routes that do not follow RESTful resource conventions may not be generated. See https://guides.rubyonrails.org/routing.html#crud-verbs-and-actions for more information.
+ * Deeply nested routes may not be generated if endpoints for their parent resources are not defined.
+
+ For routes that this gem is not able to generate due to one of the two issues above, an error message will be logged to the Rails logger, similar to the one below:
+
+ > ERROR: Could not resolve the OpenAPI route for GET http://example.org/:dataset/:version/fields
+
+In these scenarios, you could either manually define the route in your Rails application, or update the route's definition in your OpenAPI schema to follow RESTful resource conventions.
 
 ## Development
 
