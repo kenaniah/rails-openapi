@@ -20,7 +20,7 @@ class Rails::TestStripeApi < ActionDispatch::IntegrationTest
     assert_generates "/#{base}/v1/accounts", controller: "#{base}/v1/accounts", action: :index
     assert_generates "/#{base}/v1/accounts", controller: "#{base}/v1/accounts", action: :create
     assert_generates "/#{base}/v1/accounts/:id", controller: "#{base}/v1/accounts", action: :show, id: ":id"
-    #assert_generates "/#{base}/v1/accounts/1234", controller: "#{base}/v1/accounts", action: :create, id: "1234"
+    assert_generates "/#{base}/v1/accounts/1234", controller: "#{base}/v1/accounts", action: :update, id: "1234"
     assert_generates "/#{base}/v1/accounts/:id", controller: "#{base}/v1/accounts", action: :destroy, id: ":id"
 
     # assert_equal route_for("v1/accounts", :index), "#{base}/v1/accounts"

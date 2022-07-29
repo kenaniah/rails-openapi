@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
   # Uncomment to register a new dependency of your gem
   spec.add_dependency "rails", ">= 6"
   spec.add_development_dependency "bundler"
+  spec.add_development_dependency "colorize"
   spec.add_development_dependency "debug", ">= 1.0.0"
   spec.add_development_dependency "minitest", ">= 5.0"
   spec.add_development_dependency "rake", ">= 13.0"

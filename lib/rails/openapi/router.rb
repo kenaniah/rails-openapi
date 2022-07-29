@@ -76,7 +76,7 @@ module Rails
       # Returns the mode used for actions in this router
       def action_mode
         if /^:/.match?(@prefix[-1])
-          :param
+          :member
         else
           :collection
         end
@@ -86,7 +86,7 @@ module Rails
       def action_for route
         raise "Argument must be an Endpoint" unless Endpoint === route
         action = @prefix[-1]&.underscore || ""
-        action = PARAM_ROUTES[route[:method]] if action_mode == :param
+        action = PARAM_ROUTES[route[:method]] if action_mode == :member
         action = RESOURCE_ROUTES[route[:method]] if route_mode == :resource && action_mode == :collection
         action
       end
@@ -114,7 +114,11 @@ module Rails
 
           # Draw the resource
           map.send type, @prefix.last&.to_sym || "/", controller: @prefix.last&.underscore || "main", only: actions, as: @prefix.last&.underscore || "main", format: nil do
+            # Draw custom actions
             draw_actions! map
+
+            # Handle the edge case in which POST is used instead of PUT/PATCH
+            draw_post_updates! map
 
             # Draw a namespace (unless at the top)
             if @prefix.join("/").blank?
@@ -144,7 +148,6 @@ module Rails
           draw_actions! map
 
         when :action
-
           # Draw actions directly
           draw_actions! map
 
@@ -177,23 +180,26 @@ module Rails
 
       protected
 
+      # Some APIs use the POST verb instead of PUT/PATCH for updating resources
+      def draw_post_updates! map
+        @subroutes.select { |k, _| /^:/ === k }.each do |param, subroute|
+          if subroute.endpoints.select { |r| r[:method] == :post }.any?
+            map.match param, via: :post, action: :update, on: :collection
+          end
+        end
+      end
+
       def draw_actions! map
         @endpoints.each do |route|
           # Params hash for the route to be added
           params = {}
           params[:via] = route[:method]
-          params[:on] = action_mode unless action_mode == :param
           params[:action] = action_for route
-          params[:as] = @prefix.join("_")&.underscore&.gsub(":", params[:action].to_s + "_")
+          params[:on] = action_mode unless action_mode == :member
+          params[:as] = @prefix.last&.underscore
 
           # Skip actions that are handled in the resource level
-          if Symbol === params[:action]
-            # some APIs use POST instead of PUT/PATCH for resource items
-            next unless route_mode == :param && params[:via] == :post
-          end
-
-          # Skip actions that are handled in the resource level
-          # puts route_mode.to_s + " -- " + route.path + " -- " + params.inspect
+          next if Symbol === params[:action]
 
           # Add this individual route
           map.match @prefix.last, params
