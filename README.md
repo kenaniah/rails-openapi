@@ -1,6 +1,6 @@
 # Rails::Openapi
 
-Provides mountable Rails engines that can be used to route and serve your APIs from their OpenAPI schema specifications.
+Provides mountable Rails engines that can be used to route and serve your APIs based on their OpenAPI schema specifications.
 
 OpenAPI schema versions 3.0 and newer are supported. For more information about the OpenAPI specification, see https://oai.github.io/Documentation/introduction.html.
 

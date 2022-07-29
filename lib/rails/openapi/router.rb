@@ -16,11 +16,14 @@ module Rails
     # Defines RESTful routing conventions
     RESOURCE_ROUTES = {
       get: :index,
-      post: :create
+      post: :create,
+      put: :update,
+      patch: :update,
+      delete: :destroy
     }.freeze
     PARAM_ROUTES = {
       get: :show,
-      post: :create,
+      post: :update,
       patch: :update,
       put: :update,
       delete: :destroy
@@ -181,10 +184,16 @@ module Rails
           params[:via] = route[:method]
           params[:on] = action_mode unless action_mode == :param
           params[:action] = action_for route
-          params[:as] = @prefix.last&.underscore
+          params[:as] = @prefix.join("_")&.underscore&.gsub(":", params[:action].to_s + "_")
 
-          # These are handled in the resource
-          next if Symbol === params[:action]
+          # Skip actions that are handled in the resource level
+          if Symbol === params[:action]
+            # some APIs use POST instead of PUT/PATCH for resource items
+            next unless route_mode == :param && params[:via] == :post
+          end
+
+          # Skip actions that are handled in the resource level
+          # puts route_mode.to_s + " -- " + route.path + " -- " + params.inspect
 
           # Add this individual route
           map.match @prefix.last, params
