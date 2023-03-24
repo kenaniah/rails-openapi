@@ -105,7 +105,7 @@ module Rails
           end
 
           # Determine if this is a collection or a singleton resource
-          type = @subroutes.any? { |k, _| /^:/ === k } ? :resources : :resource
+          type = (@subroutes.any? { |k, _| /^:/ === k }) ? :resources : :resource
           if type == :resource && actions.include?(:index)
             # Remap index to show for singleton resources
             actions.delete :index
